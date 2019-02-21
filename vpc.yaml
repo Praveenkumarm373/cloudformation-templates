@@ -67,10 +67,10 @@ Resources:
   MyEC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
-      ImageId: ami-97785bed
+      ImageId: ami-0937dcc711d38ef3f
       KeyName: !Ref SSHKeyName
       SubnetId: !Ref SubnetA
-      InstanceType: t2.small
+      InstanceType: t2.micro
       SecurityGroupIds:
         - !Ref SecurityGroup
 Parameters:
