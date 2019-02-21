@@ -1,0 +1,106 @@
+---
+Description: >-
+  An AWS VPC with two subnets.
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+  RouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  RouteTableB:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref RouteTableA
+  SubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTableA
+      SubnetId: !Ref SubnetA
+  SubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTableB
+      SubnetId: !Ref SubnetB
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "Public Group"
+      GroupDescription: "SSH traffic in, all traffic out."
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+  MyEC2InstanceA:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0937dcc711d38ef3f
+      KeyName: !Ref SSHKeyName
+      SubnetId: !Ref SubnetA
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+  MyEC2InstanceB:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0937dcc711d38ef3f
+      KeyName: !Ref SSHKeyName
+      SubnetId: !Ref SubnetB
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+Parameters:
+  VpcCidrBlock:
+    Description: VPC CIDR Range (will be a /16 block)
+    Type: String
+    Default: 10.0.0.0/16
+  SubnetACidrBlock:
+    Description: Public Subnet CIDR Range
+    Type: String
+    Default: 10.0.1.0/24
+  SubnetBCidrBlock:
+    Description: Private Subnet CIDR Range
+    Type: String
+    Default: 10.0.2.0/24
+  SSHKeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+ 
+
