@@ -88,6 +88,7 @@ Parameters:
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 Outputs:
   MyEC2InstancePublicIP:
-    Value: !GetAtt
-      - MyEC2Instance
-      - PublicIp
+    Value: 
+      'Fn::GetAtt':
+        - MyEC2Instance
+        - PublicIp
